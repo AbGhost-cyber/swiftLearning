@@ -179,17 +179,81 @@ struct Game{
     }
 }
 var game = Game()
-game.score = 10
-game.score -= 3
+//game.score = 10
+//game.score -= 3
 
 struct Player{
     let name:String
     let number:Int
     
+    //
     init(name:String){
         self.name = name
         number = Int.random(in: 1...99)
     }
 }
 let player = Player(name: "Chelsea")
-print(player)
+//print(player)
+
+protocol BankProtocol{
+    func deposit(amount:Double)
+    func withdraw(amount:Double)->Bool
+}
+
+class BankAccount : BankProtocol{
+    private (set) var funds:Double = 0
+    static let version = "1.3 beta 2"
+    
+    init(funds:Double){
+        self.funds = funds
+    }
+     func deposit(amount:Double){
+        funds += amount
+    }
+    func withdraw(amount:Double)->Bool{
+        let canWithdraw = funds > amount
+        if(canWithdraw){
+            funds -= amount
+        }
+        return canWithdraw
+    }
+}
+let bank = BankAccount(funds: 200.53)
+bank.withdraw(amount: 120)
+
+extension BankAccount{
+    func send(to:String,amount:Double){
+        print("Sending to \(to)...")
+        let didSend = self.withdraw(amount: amount)
+        if(didSend){
+            print("successfully sent \(amount) to \(to)")
+        }else{
+            print("insufficient funds")
+        }
+    }
+}
+var maBank = BankAccount(funds: 120)
+//maBank.send(to: "Abundance", amount: 20)
+
+let opposites = [
+    "Mario":"Wario",
+    "Luigi":"Waluigi"
+]
+// if unwrap
+if let mmm = opposites["Peach"]{
+    print("Mario's opposite is \(mmm)")
+}
+//use guard unwrap
+func printSquare(of number:Int?){
+    guard let number = number else {
+        print("Missing input")
+        return
+    }
+    print("\(number) x \(number) is \(number * number)")
+}
+let arrayes = [1,2,3,4,5,6]
+let fav = arrayes.randomElement() ?? 0
+let input = "555"
+if let tr = Int(input){
+    print(tr)
+}
