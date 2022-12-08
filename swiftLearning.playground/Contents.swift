@@ -129,11 +129,67 @@ func checkPassword(password:String) throws ->String{
     return password.count < 10 ? "Ok" : "Good"
 }
 
-do{
-    let result = try checkPassword(password: "12345")
-    print("Rating: \(result)")
-}catch PasswordError.obvious{
-    print("too common password")
-}catch PasswordError.short{
-    print("password is too short")
+//do{
+//    let result = try checkPassword(password: "12345")
+//    print("Rating: \(result)")
+//}catch PasswordError.obvious{
+//    print("too common password")
+//}catch PasswordError.short{
+//    print("password is too short")
+//}
+
+let team = ["Gloria", "Suzanne", "Tiffany", "Tasha"]
+let onlyT = team.filter{name in
+    name.hasPrefix("T")
 }
+let transformed = team.map{ name in
+    return name.count * 2
+}
+
+struct Album{
+    let title:String
+    let artist:String
+    var isReleased = true
+    
+    func printSummary(){
+        print("\(title) by \(artist)")
+    }
+}
+struct Employee{
+    let name:String
+    var vacationAllowed = 14
+    var vacationTaken = 0
+    var vacationRemaining:Int{
+        get{
+            vacationAllowed - vacationTaken
+        }
+        set{
+            vacationAllowed = vacationTaken + newValue
+        }
+    }
+}
+
+var mEmployee = Employee(name: "Dremo", vacationAllowed: 12, vacationTaken: 2)
+
+struct Game{
+    var score = 0{
+        didSet{
+            print("Score is now \(score)")
+        }
+    }
+}
+var game = Game()
+game.score = 10
+game.score -= 3
+
+struct Player{
+    let name:String
+    let number:Int
+    
+    init(name:String){
+        self.name = name
+        number = Int.random(in: 1...99)
+    }
+}
+let player = Player(name: "Chelsea")
+print(player)
