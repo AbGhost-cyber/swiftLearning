@@ -254,6 +254,57 @@ func printSquare(of number:Int?){
 let arrayes = [1,2,3,4,5,6]
 let fav = arrayes.randomElement() ?? 0
 let input = "555"
-if let tr = Int(input){
-    print(tr)
+//if let tr = Int(input){
+//    print(tr)
+//}
+
+struct MPlayer{
+    var name:String
+    var highScore:Int = 0
+    var history:[Int] = []
+    
+    init(_ name:String){
+        self.name = name
+    }
 }
+extension MPlayer :Codable, Equatable{
+    mutating func updateScore(_ newScore:Int){
+        history.append(newScore)
+        if(self.highScore < newScore){
+            self.highScore = newScore
+            print("\(newScore)! A new high score for \(self.name) 🥳")
+        }
+    }
+}
+
+var mPlayer = MPlayer("Chelsea")
+mPlayer.updateScore(30)
+let mPlayer1 = MPlayer("Man Utd")
+let mPlayer2 = MPlayer("Man City")
+let players:[MPlayer] = [mPlayer1,mPlayer2,mPlayer]
+
+
+let ranked = players.sorted{player1, player2 in
+    player1.highScore > player2.highScore
+}
+
+extension Collection where Element == MPlayer {
+    // Returns the highest score of all the players,
+    // or `nil` if the collection is empty.
+    func highestScoringPlayer() -> MPlayer? {
+        return self.max(by: { $0.highScore < $1.highScore })
+    }
+}
+var recordHolder = ""
+if let bestPlayer = players.highestScoringPlayer() {
+    recordHolder = """
+        The record holder is \(bestPlayer.name),\
+        with a high score of \(bestPlayer.highScore)!
+        """
+} else {
+    recordHolder = "No games have been played yet."
+}
+print(recordHolder)
+
+let highestScore = players.highestScoringPlayer()?.highScore ?? 0
+print(highestScore)
