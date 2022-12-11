@@ -8,5 +8,9 @@
 import Foundation
 
 class Locations: ObservableObject {
+    let places:[Location]
     
+    init(places: [Location]) {
+        self.places = places
+    }
 }
