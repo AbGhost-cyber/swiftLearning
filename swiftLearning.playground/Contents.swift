@@ -278,7 +278,7 @@ extension MPlayer :Codable, Equatable{
 }
 
 var mPlayer = MPlayer("Chelsea")
-mPlayer.updateScore(30)
+//mPlayer.updateScore(30)
 let mPlayer1 = MPlayer("Man Utd")
 let mPlayer2 = MPlayer("Man City")
 let players:[MPlayer] = [mPlayer1,mPlayer2,mPlayer]
@@ -304,7 +304,136 @@ if let bestPlayer = players.highestScoringPlayer() {
 } else {
     recordHolder = "No games have been played yet."
 }
-print(recordHolder)
+//print(recordHolder)
 
 let highestScore = players.highestScoringPlayer()?.highScore ?? 0
-print(highestScore)
+//print(highestScore)
+
+func existHigher( for numbers:[Int], compare:Int)->Bool{
+    if let max = numbers.max(){
+        return max >= compare
+    }
+    return false
+}
+//print(existHigher(for: [1,2,3,4,5], compare: 8))
+
+func dividable(for numbers:[Int], divisor:Int)->[Int]{
+    let results = numbers.map{ number in
+        number % divisor
+    }
+    return results
+}
+//print(dividable(for: [17, 11, 99, 55, 23, 1], divisor: 5))
+
+func carsNeeded(for n:Int)->Int{
+    let maxNumberPerCar = 5
+    var noOfCarPerMax = 0
+    
+    let hasPassengersLeft = n % maxNumberPerCar > 0
+    noOfCarPerMax = n / maxNumberPerCar
+    if(hasPassengersLeft){
+        noOfCarPerMax += 1
+    }
+    return noOfCarPerMax
+}
+//print(carsNeeded(for: 5))
+struct Person{
+    let name:String
+    let age:Int
+    init(_ name:String, _ age:Int){
+        self.name = name
+        self.age = age
+    }
+    func compareAge(_ person:Person){
+        if self.age > person.age{
+            print("\(person.name) is younger than me")
+        }else if self.age < person.age{
+            print("\(person.name) is older than me")
+        }else{
+            print("\(person.name) is the same age as me")
+        }
+    }
+}
+var p1 = Person("Samuel", 24)
+var p2 = Person("Joel", 36)
+var p3 = Person("Lily", 24)
+
+
+func sumDigits(of x:Int, and y:Int)->Int{
+    if( x > y) {return 0}
+    var betweenDigits:[Int] = []
+    var sum = 0
+    for i in x...y{
+        let digitStr = String(i)
+        if(digitStr.count > 1){
+            digitStr.map{char in
+                if let number = Int(String(char)){
+                    betweenDigits.append(number)
+                }
+            }
+        }else{
+            betweenDigits.append(i)
+        }
+        
+    }
+    
+    betweenDigits.forEach{ digit in
+        sum += digit
+    }
+    return sum
+}
+
+//print(sumDigits(of: 100, and: 200))
+enum Result<Sucess,Failure>{
+    case success(Sucess)
+    case failure(Failure)
+}
+func doSomething(completion:(Result<MPlayer,Error>)->Void){
+    completion(.success(MPlayer("Abundance")))
+    
+}
+
+func letterCounter(_ letterArray:[Array<String>], _ searchLetter:String)->String{
+    
+    func transformToText(_ i:Int, isRow:Bool = false)->String{
+        switch(i){
+        case 1: return isRow ? "first":"once"
+        case 2: return isRow ? "second":"twice"
+        case 3: return isRow ? "third":"thrice"
+        case 4: return isRow ? "fourth":"4"
+        default: return isRow ? "fifth":"5"
+        }
+    }
+    var result = ""
+    var secondResult = ""
+    var showedUpCount = 0
+    for i in letterArray.indices{
+        let childArray = letterArray[i]
+       let count = childArray.filter{letter in
+            letter == searchLetter
+        }.count
+        if(count > 0){
+            showedUpCount += count
+            let extraText = """
+\(transformToText(count)) in the \(transformToText(i+1,isRow: true)) row
+"""
+            if(secondResult.isEmpty){
+                secondResult = extraText
+            }else{
+                secondResult += ", \(extraText)"
+            }
+        }
+    }
+    result = "\(searchLetter) showed up \(showedUpCount) times: \(secondResult)"
+    return result
+}
+
+//print(letterCounter([
+//    ["D", "E", "Y", "H", "A", "D"],
+//    ["C", "B", "Z", "Y", "J", "K"],
+//    ["D", "B", "C", "A", "M", "N"],
+//    ["F", "G", "G", "R", "S", "R"],
+//    ["V", "X", "H", "A", "S", "S"]
+//], "X"))
+
+
