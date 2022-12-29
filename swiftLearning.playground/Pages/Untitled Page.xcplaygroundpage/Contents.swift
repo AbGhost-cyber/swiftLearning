@@ -436,4 +436,156 @@ func letterCounter(_ letterArray:[Array<String>], _ searchLetter:String)->String
 //    ["V", "X", "H", "A", "S", "S"]
 //], "X"))
 
+enum NetworkError: Error {
+    case badurl
+    case invalidResponse
+    case decodingError
+}
+
+struct Product: Codable {
+    let id: Int?
+    let title:String
+    let price: Double
+    let description: String
+    let image: String
+    let category: String
+}
+
+extension URL {
+    static func forProductId(_ id:Int) -> URL? {
+       var components = URLComponents()
+        components.scheme = "https"
+        components.host = "fakestoreapi.com"
+        components.path = "/productsss/\(id)"
+        
+        return components.url
+    }
+    static var forAllProducts: URL {
+        URL(string: "https://fakestoreapi.com/products")!
+    }
+}
+
+extension Product {
+    
+    static func byId(_ id:Int) -> Resource<Product> {
+        guard let url = URL.forProductId(id) else {
+            fatalError("id = \(id) was not found.")
+        }
+        return Resource(url: url)
+    }
+    static var all: Resource<[Product]> {
+        return Resource(url: URL.forAllProducts)
+    }
+}
+
+enum HttpMethod {
+    case get([URLQueryItem])
+    case post(Data?)
+    
+    var name: String {
+        switch self {
+        case .get:
+            return "GET"
+        case .post:
+            return "POST"
+        }
+    }
+}
+
+struct Resource<T: Codable> {
+    let url: URL
+    var method: HttpMethod = .get([])
+}
+enum ResourceState<Sucess: Codable, Failure:StringProtocol> {
+    case failed(Failure)
+    case sucess(Sucess)
+}
+
+class WebService {
+     
+    func load<T: Codable>(_ resource: Resource<T>) async throws -> ResourceState<T,String> {
+        //load request
+        var request = URLRequest(url: resource.url)
+        
+        print("loading...")
+        
+        switch resource.method {
+        case .post(let data):
+            request.httpMethod = resource.method.name
+            request.httpBody = data
+        case .get(let queryItems):
+            var components = URLComponents(url: resource.url, resolvingAgainstBaseURL: false)
+            components?.queryItems = queryItems
+            guard let url = components?.url else {
+                //throw NetworkError.badurl
+                return ResourceState.failed("url appears to be broken")
+            }
+            request = URLRequest(url: url)
+        }
+        
+        //create the URLSession config
+        let configuration = URLSessionConfiguration.default
+        //add default headers
+        configuration.httpAdditionalHeaders = ["Content-Type": "application/json"]
+        let session = URLSession(configuration: configuration)
+        
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse,
+                httpResponse.statusCode == 200
+        else {
+           // throw NetworkError.invalidResponse
+            var code = response as? HTTPURLResponse
+            return ResourceState.failed("you have no internet connection \(code?.statusCode ?? 0)")
+        }
+
+        
+        guard let result = try? JSONDecoder().decode(T.self, from: data) else {
+           // throw NetworkError.decodingError
+            return ResourceState.failed("an error occurred while decoding")
+        }
+        
+        return ResourceState.sucess(result)
+    }
+}
+struct Transaction: Codable {
+    let id: Int
+    let date: String
+    let institution: String
+    let account: String
+    var merchant: String
+    let amount: Double
+    let type: TransactionType.RawValue
+    var categoryId: Int
+    var category: String
+    let isPending: Bool
+    var isTransfer: Bool
+    var isExpense: Bool
+    var isEdited: Bool
+    
+    var signedAmount: Double {
+        return type == TransactionType.credit.rawValue ? amount : -amount
+    }
+}
+enum TransactionType : String {
+    case debit = "debit"
+    case credit = "credit"
+}
+
+extension Transaction {
+    static var all: Resource<[Transaction]> {
+        return Resource(url: URL(string: "https://designcode.io/data/transactions.json")!)
+    }
+}
+
+Task {
+    let result = try await WebService().load(Product.byId(2))
+   // let transactions = try await WebService().load(Transaction.all)
+   // print(transactions)
+    switch result {
+    case ResourceState.sucess(let product):
+        print(product)
+    case ResourceState.failed(let error):
+        print(error)
+    }
+}
 
