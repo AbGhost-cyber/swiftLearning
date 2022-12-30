@@ -1,6 +1,7 @@
 //: [Previous](@previous)
 
 import Foundation
+import Combine
 
 var greeting = "Hello, playground"
 
@@ -16,13 +17,105 @@ let minuteIntervals = 5
 let minutes = 60
 
 for tickMark in stride(from: 0, to: minutes, by: minuteIntervals) {
-   // print(tickMark)
+    // print(tickMark)
 }
 for ticks in stride(from: 0, through: minutes, by: minuteIntervals) {
     //print("\(ticks) times")
 }
-var times = 0
-repeat{
-    times += 5
-    print(times)
-} while times != 60
+//var times = 0
+//repeat{
+//    times += 5
+//    print(times)
+//} while times != 60
+
+let isActive = false
+let isNotU = false
+enum MyError : Error {
+    case NotSure(String)
+    
+}
+func getTitle3() throws -> String {
+    if isActive {
+        return "Succeed"
+    }else if isNotU{
+        throw URLError(URLError.badURL)
+    } else {
+        throw MyError.NotSure("Are you mad or something")
+    }
+}
+/*
+//do {
+//    let manager = try getTitle3()
+//    print(manager)
+//}catch  {
+//
+//}
+
+//switch manager {
+//case .success(let title):
+//    print("\(title)")
+//case .failure(let error):
+//    print(error.localizedDescription)
+//}
+*/
+func handleResponse(data:Data?, response:URLResponse?) -> Data? {
+    guard
+        let data = data,
+        let response = response as? HTTPURLResponse,
+        response.statusCode >= 200 && response.statusCode < 300 else {
+        return nil
+    }
+    return data
+}
+let url = URL(string: "https://picsum.photos/200")
+
+//escaping
+func downloadWithEscaping(completionHandler: @escaping(_ data: Data?, _ error: Error?) -> Void){
+    URLSession.shared.dataTask(with: url!) { data, response, error in
+        let data = handleResponse(data: data, response: response)
+        completionHandler(data, error)
+    }
+    .resume()
+}
+//combine
+var cancellables = Set<AnyCancellable>()
+func downloadWithCombine() -> AnyPublisher<Data?, Error>{
+    URLSession.shared.dataTaskPublisher(for: url!)
+        .map(handleResponse)
+        .mapError({$0})
+        .eraseToAnyPublisher()
+}
+//async
+func downloadWithAsync() async throws -> Data? {
+    do {
+        let (data, response) = try await URLSession.shared.data(from: url!)
+        return handleResponse(data: data, response: response)
+    } catch {
+        throw error
+    }
+    
+}
+
+downloadWithEscaping { data, error in
+    guard let data else {
+        return
+    }
+    //print("from escaping: \(data)")
+}
+downloadWithCombine()
+    .sink { _ in
+        
+    } receiveValue: { data in
+        if let data = data {
+           // print("from combine: \(data)")
+        }
+    }
+    .store(in: &cancellables)
+
+Task {
+    let result = try await downloadWithAsync()
+    if let result = result {
+        
+    }
+}
+
