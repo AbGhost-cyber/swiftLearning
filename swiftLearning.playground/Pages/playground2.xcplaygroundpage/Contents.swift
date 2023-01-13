@@ -138,3 +138,40 @@ class StepCounter {
         }
     }
 }
+struct TimesTable {
+    let multiplier:Int
+    subscript(index: Int)-> Int {
+        return multiplier * index
+    }
+}
+let threeTimesTable = TimesTable(multiplier: 3)
+//print(threeTimesTable[2])
+
+
+func makeIncrement(forIncrement amount: Int) -> () -> Int {
+    var runningTotal = 0
+    func incrementer() -> Int {
+        runningTotal += amount
+        return runningTotal
+    }
+    return incrementer
+}
+let inc = makeIncrement(forIncrement: 13)
+
+var completionHandlers: [() -> Void] = []
+
+func someFunctionWithEscapingClosure(completionHandler: @escaping ()-> Void) {
+    completionHandlers.append(completionHandler)
+}
+protocol SomeProtocol {
+    var mustBeSettable: Int { get set }
+    var doesNotNeedToBeSettable: Int { get }
+}
+class SomeClass: SomeProtocol {
+    var mustBeSettable: Int = 8
+    
+    let doesNotNeedToBeSettable: Int = 9
+}
+
+let instance = SomeClass()
+print(instance.doesNotNeedToBeSettable)

@@ -589,3 +589,25 @@ Task {
     }
 }
 
+func getFormattedDate() -> String {
+    let calendar = Calendar.current
+    let date = Date(timeIntervalSince1970: 1477593000000 / 1000.0)
+    var formattedValue = ""
+    if calendar.isDateInToday(date) {
+        formattedValue += "Today"
+    }else if calendar.isDateInTomorrow(date) {
+        formattedValue += "Tomorrow"
+    } else if calendar.isDateInYesterday(date) {
+        formattedValue += "Yesterday"
+    }else if calendar.isDateInWeekend(date) {
+        formattedValue += date.formatted(.dateTime.weekday())
+    }
+    if formattedValue.isEmpty {
+        formattedValue = date.formatted(.dateTime.day())
+        formattedValue += " \(date.formatted(.dateTime.month().year(.twoDigits).hour().minute()))"
+    }else {
+        formattedValue += ", \(date.formatted(.dateTime.hour().minute()))"
+    }
+    return formattedValue
+}
+print(getFormattedDate())
