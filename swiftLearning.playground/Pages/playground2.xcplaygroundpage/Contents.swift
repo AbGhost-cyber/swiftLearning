@@ -44,20 +44,20 @@ func getTitle3() throws -> String {
     }
 }
 /*
-//do {
-//    let manager = try getTitle3()
-//    print(manager)
-//}catch  {
-//
-//}
-
-//switch manager {
-//case .success(let title):
-//    print("\(title)")
-//case .failure(let error):
-//    print(error.localizedDescription)
-//}
-*/
+ //do {
+ //    let manager = try getTitle3()
+ //    print(manager)
+ //}catch  {
+ //
+ //}
+ 
+ //switch manager {
+ //case .success(let title):
+ //    print("\(title)")
+ //case .failure(let error):
+ //    print(error.localizedDescription)
+ //}
+ */
 func handleResponse(data:Data?, response:URLResponse?) -> Data? {
     guard
         let data = data,
@@ -107,7 +107,7 @@ downloadWithCombine()
         
     } receiveValue: { data in
         if let data = data {
-           // print("from combine: \(data)")
+            // print("from combine: \(data)")
         }
     }
     .store(in: &cancellables)
@@ -173,5 +173,102 @@ class SomeClass: SomeProtocol {
     let doesNotNeedToBeSettable: Int = 9
 }
 
-let instance = SomeClass()
-print(instance.doesNotNeedToBeSettable)
+struct Question: Decodable {
+    let category: String
+    let id: String
+    let correctAnswer: String
+    let incorrectAnswers: [String]
+    let question: String
+    
+    var options: [String] {
+        var answers = [String]()
+        answers.append(contentsOf: incorrectAnswers)
+        answers.append(correctAnswer)
+        answers.shuffle()
+        return answers
+    }
+}
+enum ChildCategories: String {
+    case artLiterature = "arts_and_literature"
+    case filmTv = "film_and_tv"
+    case foodDrink = "food_and_drink"
+    case gK = "general_knowledge"
+    case geography
+    case history
+    case music
+    case science
+    case societyCulture = "society_and_culture"
+    case sportLeisure = "sport_and_leisure"
+}
+
+enum Categories: String, CaseIterable {
+    case artLiterature = "Arts & Literature"
+    case filmTV = "Film & TV"
+    case foodDrink = "Food & Drink"
+    case GK = "General Knowledge"
+    case geography
+    case history
+    case music
+    case science
+    case societyCulture
+    case sportLeisure = "sport_and_leisure"
+}
+
+protocol QuestionAPI {
+    func fetchQuestion(category: String) async throws -> [Question]
+}
+
+
+
+enum ApiError: Error {
+    case invalidURL
+    case invalidResponseType
+    case httpStatusCodeFailed(statusCode: Int, error: Error?)
+}
+struct QuestionAPiImpl: QuestionAPI {
+    private let session = URLSession.shared
+    private let baseURL = URL(string: "https://the-trivia-api.com/api/")
+    private let jsonDecoder = JSONDecoder()
+    
+    
+//    func fetchCategories() async throws -> Categories {
+//        guard let url = URL(string: "categories", relativeTo: baseURL) else { throw ApiError.invalidURL}
+//        let (response, statusCode): (Categories, Int) = try await fetch(url: url)
+//        print(statusCode)
+//        return response
+//    }
+    
+    func fetchQuestion(category: String) async throws -> [Question] {
+        guard let url = URL(string: "questions?limit=10&categories=\(category)", relativeTo: baseURL) else { throw ApiError.invalidURL }
+        let(data, _): ([Question], Int) = try await fetch(url: url)
+         return data
+    }
+    
+    
+    private func fetch<D: Decodable>(url: URL) async throws -> (D, Int) {
+        let (data, response) = try await session.data(from: url)
+        let statusCode = try validateHTTPResponse(response: response)
+        return (try jsonDecoder.decode(D.self, from: data), statusCode)
+    }
+    
+    
+    private func validateHTTPResponse(response: URLResponse) throws -> Int {
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw ApiError.invalidResponseType
+        }
+        guard 200...299 ~= httpResponse.statusCode ||
+                400...499 ~= httpResponse.statusCode else {
+            throw ApiError.httpStatusCodeFailed(statusCode: httpResponse.statusCode, error: nil)
+        }
+        return httpResponse.statusCode
+    }
+}
+let questionAPI = QuestionAPiImpl()
+
+Task {
+//    let fetchedCat = try await quotesAPI.fetchCategories()
+//    print(fetchedCat)
+    let questions = try await questionAPI.fetchQuestion(category: ChildCategories.music.rawValue)
+    print(questions[0].options)
+}
+
