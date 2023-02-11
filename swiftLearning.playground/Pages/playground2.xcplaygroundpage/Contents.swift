@@ -269,6 +269,37 @@ Task {
 //    let fetchedCat = try await quotesAPI.fetchCategories()
 //    print(fetchedCat)
     let questions = try await questionAPI.fetchQuestion(category: ChildCategories.music.rawValue)
-    print(questions[0].options)
+    //print(questions[0].options)
 }
 
+class WebSocket {
+    private var webSocketTask: URLSessionWebSocketTask?
+    
+    func openSocket() async throws {
+        let session = URLSession.shared
+        let myUrl = URL(string: "ws://localhost:8080/chat?username=charles")!
+        webSocketTask = session.webSocketTask(with: myUrl)
+        webSocketTask?.resume()
+    }
+    func onRecieve() async throws {
+        let message = try await webSocketTask?.receive()
+        if case .string(let data) = message {
+            print(data)
+           try await onRecieve()
+        }
+    }
+    func onSend(text: String) async throws {
+        try await webSocketTask?.send(.string(text))
+    }
+    func disconnect() {
+        webSocketTask?.cancel(with: .normalClosure, reason: nil)
+    }
+}
+
+Task {
+    let webService = WebSocket()
+    try await webService.openSocket()
+    try await webService.onRecieve()
+    try await Task.sleep(for: .seconds(3))
+    try await webService.onSend(text: "Hello friends")
+}
